@@ -1,0 +1,424 @@
+{-# START_FILE README.md #-}
+# {{name}}
+
+Hello there!
+
+{-# START_FILE package.json #-}
+{
+  "name": "{{name}}",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm run build && node -r dotenv/config dist/main.js",
+    "build": "tsc",
+    "typecheck": "npm run build --noemit",
+    "lint": "eslint",
+    "test": "vitest"
+  },
+  "engines": {
+    "node": "22.16.0",
+    "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.23.0",
+    "@types/express": "^5.0.1",
+    "dotenv": "^16.4.7",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-functional": "^9.0.1",
+    "eslint-plugin-prettier": "^5.2.6",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.29.0",
+    "vitest": "^3.2.3"
+  },
+  "dependencies": {
+  }
+}
+
+{-# START_FILE tsconfig.json #-}
+{
+  "compilerOptions": {
+    "strict": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "target": "es2022",
+    "sourceMap": true,
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
+
+{-# START_FILE src/main.ts #-}
+console.log('Hello there!');
+
+{-# START_FILE eslint.config.js #-}
+import jseslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import prettier from 'eslint-plugin-prettier/recommended';
+import fneslint from 'eslint-plugin-functional';
+
+const tseslintConfig = [
+  ...tseslint.config(
+    ...tseslint.configs.strict,
+    ...tseslint.configs.stylistic,
+    {
+      files: ['**/*.ts', '**/*.tsx'],
+      languageOptions: {
+        parserOptions: {
+          project: true,
+          tsconfigDirName: import.meta.dirname,
+        },
+      },
+    },
+  ),
+];
+
+const prettierConfig = [
+  {
+    ...prettier,
+    rules: {
+      ...prettier.rules,
+      'prettier/prettier': [
+        'error',
+        {
+          // Prettier options
+          singleQuote: true,
+          jsxSingleQuote: true,
+        },
+      ],
+    },
+  },
+];
+
+const fneslintConfig = [
+  {
+    plugins: {
+      functional: fneslint,
+    },
+    rules: {
+      // No exceptions
+      'functional/no-promise-reject': 'error',
+      'functional/no-throw-statements': 'error',
+      'functional/no-try-statements': 'error',
+      // No mutations
+      'functional/immutable-data': 'error',
+      'functional/no-let': 'error',
+      'functional/prefer-readonly-type': 'error',
+      // No other paradigms
+      'functional/no-this-expressions': 'error',
+      // No statements, ignoreVoid allows expression of type void and
+      // Promise<void> are not flagged as violations
+      'functional/no-expression-statements': ['error', { ignoreVoid: true }],
+      'functional/no-loop-statements': 'error',
+      'functional/no-return-void': 'error',
+      // Stylistic
+      'functional/prefer-property-signatures': 'warn',
+      'functional/prefer-tacit': 'warn',
+      // Vanilla
+      'no-var': 'error',
+      'no-param-reassign': 'error',
+    },
+  },
+  {
+    // Disables some rules that would raise errors
+    // in the files where the tests are defined
+    files: ['**/*.+(test|spec).ts'],
+    rules: {
+      'functional/no-expression-statements': 'off',
+      'functional/no-return-void': 'off',
+    },
+  },
+];
+
+export default [
+  // Load js rules
+  jseslint.configs.recommended,
+  // Define rules to enforce functional paradigm
+  ...fneslintConfig,
+  // Load ts strict and stylistic config
+  ...tseslintConfig,
+  // Runs Prettier as an ESLint rule and reports
+  // differences as individual ESLint issues
+  ...prettierConfig,
+  {
+    // Ignore everything under any dist/ directory
+    ignores: ['**/dist/'],
+  },
+];
+
+{-# START_FILE .editorconfig #-}
+# EditorConfig is awesome: http://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 2
+indent_style = space
+insert_final_newline = true
+max_line_length = 80
+trim_trailing_whitespace = true
+
+{-# START_FILE .gitignore #-}
+# Created by https://www.toptal.com/developers/gitignore/api/emacs,node,macos
+# Edit at https://www.toptal.com/developers/gitignore?templates=emacs,node,macos
+
+### Emacs ###
+# -*- mode: gitignore; -*-
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Org-mode
+.org-id-locations
+*_archive
+
+# flymake-mode
+*_flymake.*
+
+# eshell files
+/eshell/history
+/eshell/lastdir
+
+# elpa packages
+/elpa/
+
+# reftex files
+*.rel
+
+# AUCTeX auto folder
+/auto/
+
+# cask packages
+.cask/
+dist/
+
+# Flycheck
+flycheck_*.el
+
+# server auth directory
+/server/
+
+# projectiles files
+.projectile
+
+# directory configuration
+.dir-locals.el
+
+# network security
+/network-security.data
+
+
+### macOS ###
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+### macOS Patch ###
+# iCloud generated files
+*.icloud
+
+### Node ###
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Directory for instrumented libs generated by jscoverage/JSCover
+lib-cov
+
+# Coverage directory used by tools like istanbul
+coverage
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
+
+# Bower dependency directory (https://bower.io/)
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons (https://nodejs.org/api/addons.html)
+build/Release
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Snowpack dependency directory (https://snowpack.dev/)
+web_modules/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+out
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+# Comment in the public line in if your project uses Gatsby and not Next.js
+# https://nextjs.org/blog/next-9-1#public-directory-support
+# public
+
+# vuepress build output
+.vuepress/dist
+
+# vuepress v2.x temp and cache directory
+.temp
+
+# Docusaurus cache and generated files
+.docusaurus
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+### Node Patch ###
+# Serverless Webpack directories
+.webpack/
+
+# Optional stylelint cache
+
+# SvelteKit build / generate output
+.svelte-kit
+
+### Haskell ###
+dist
+dist-*
+cabal-dev
+*.o
+*.hi
+*.hie
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+.hpc
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+*.prof
+*.aux
+*.hp
+*.eventlog
+.stack-work/
+cabal.project.local
+cabal.project.local~
+.HTF/
+.ghc.environment.*
+
+# End of https://www.toptal.com/developers/gitignore/api/emacs,node,macos
+
+# Exclude local env which can contain secrets
+.env

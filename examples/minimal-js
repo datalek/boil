@@ -1,0 +1,18 @@
+{-# START_FILE package.json #-}
+{
+  "name": "{{name}}",
+  "version": "1.0.0",
+  "description": "{{description}}",
+  "author": "{{author}}",
+  "scripts": {
+    "dev": "node ./src/main.js"
+  }
+}
+
+{-# START_FILE src/main.js #-}
+console.log("Hello there!!");
+
+{-# START_FILE README.md #-}
+# {{name}}
+
+Created by {{author}}.
