@@ -1,5 +1,9 @@
 # Boil - Project Scaffolding Tool
 
+<p align="center">
+    <img src="/docs/boil-logo.png">
+</p>
+
 A simple project scaffolding tool that generates project structures from hsfiles-style templates.
 
 ## Features
