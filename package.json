@@ -1,6 +1,6 @@
 {
   "name": "boil",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Project scaffolding tool using hsfiles templates",
   "private": true,
   "type": "module",
