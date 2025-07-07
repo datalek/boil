@@ -27,8 +27,8 @@ jobs:
         uses: changesets/action@v1
         with:
           publish: |
-            npm run build
-            zip -r boil-node-22.zip dist/boil.cjs -j
+            npm run build &&
+            zip -r boil-node-22.zip dist/boil.cjs -j &&
             gh release upload ${{github.event.release.tag_name}} boil-node-22.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
