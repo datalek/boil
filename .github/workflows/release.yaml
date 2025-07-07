@@ -24,11 +24,15 @@ jobs:
         run: npm i
 
       - name: Create Release Pull Request
+        id: changesets
         uses: changesets/action@v1
-        with:
-          publish: |
-            npm run build &&
-            zip -r boil-node-22.zip dist/boil.cjs -j &&
-            gh release upload ${{github.event.release.tag_name}} boil-node-22.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        # Upload an artifact when a publish should happen.
+        run: |
+          npm run build
+          zip -r boil-node-22.zip dist/boil.cjs -j
+          gh release upload ${{github.event.release.tag_name}} boil-node-22.zip
