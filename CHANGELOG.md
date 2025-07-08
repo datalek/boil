@@ -1,5 +1,11 @@
 # boil
 
+## 0.0.3
+
+### Patch Changes
+
+- d0e4434: Fix release
+
 ## 0.0.2
 
 ### Patch Changes
