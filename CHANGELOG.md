@@ -1,5 +1,12 @@
 # boil
 
+## 0.0.2
+
+### Patch Changes
+
+- 86b2358: Add release step
+- d39ef0d: Add release step
+
 ## 0.0.1
 
 ### Patch Changes
