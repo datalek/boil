@@ -2,7 +2,6 @@
   "name": "boil",
   "version": "0.0.0",
   "description": "Project scaffolding tool using hsfiles templates",
-  "private": true,
   "type": "module",
   "scripts": {
     "dev": "npm run build && node dist/boil.cjs",
