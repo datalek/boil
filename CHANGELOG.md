@@ -1,5 +1,11 @@
 # boil
 
+## 0.0.4
+
+### Patch Changes
+
+- a972d43: Change the name of release
+
 ## 0.0.3
 
 ### Patch Changes
