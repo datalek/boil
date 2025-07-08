@@ -1,4 +1,4 @@
-name: Release
+name: Release & Publish
 
 on:
   push:
@@ -8,25 +8,28 @@ on:
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  release:
-    name: Release
+  version-and-tag:
+    name: Version & Tag
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
+    outputs:
+      published: ${{ steps.publish-output.outputs.published }}
+      publishedPackages: ${{ steps.publish-output.outputs.publishedPackages }}
     steps:
-      - name: Checkout Repo
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-fole: package.json
+          node-version-file: package.json
 
       - name: Install Dependencies
-        run: npm i
+        run: npm ci
 
-      - name: Create Release Pull Request
+      - name: Version Packages & Create Tags
         id: changesets
         uses: changesets/action@v1
         with:
@@ -35,20 +38,39 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Release
-        needs: [release]
-        if: steps.changesets.outputs.published == 'true'
-        continue-on-error: true
-        strategy:
-          matrix:
-            package: ${{ fromJson(steps.changesets.outputs.publishedPackages) }}
+      - name: Set Job Outputs
+        id: publish-output
+        run: |
+          # Workaround: intermediate variable prevents shell quoting issues
+          # that interfere with fromJson deserialization
+          publishedPackages=${{ toJSON(steps.changesets.outputs.publishedPackages) }}
+
+          echo 'published=${{ steps.changesets.outputs.published }}' >> "$GITHUB_OUTPUT"
+          echo "publishedPackages=$publishedPackages" >> "$GITHUB_OUTPUT"
+
+  create-releases:
+    name: Create GitHub Releases
+    needs: [version-and-tag]
+    if: needs.version-and-tag.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.version-and-tag.outputs.publishedPackages) }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Package & Create Release
         run: |
           npm run build
 
           tar czf ./dist/boil-node-22.tgz ./dist/boil.cjs
 
-          tag = ${{ matrix.package.name }}@${{ matrix.package.version }}
+          tag="${{ matrix.package.name }}@${{ matrix.package.version }}"
           gh release create "$tag" ./dist/*.tgz \
             --repo="$GITHUB_REPOSITORY" \
-            --title="${tag}" \
+            --title="$tag" \
             --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
