@@ -1,0 +1,5 @@
+---
+"boil": patch
+---
+
+Fix release
