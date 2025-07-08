@@ -35,10 +35,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish
-        if: steps.changesets.outputs.hasChangesets == 'false'
-        # Upload an artifact when a publish should happen.
+      - name: Release
+        needs: [release]
+        if: steps.changesets.outputs.published == 'true'
+        continue-on-error: true
+        strategy:
+          matrix:
+            package: ${{ fromJson(steps.changesets.outputs.publishedPackages) }}
         run: |
           npm run build
-          zip -r boil-node-22.zip dist/boil.cjs -j
-          gh release upload ${{github.event.release.tag_name}} boil-node-22.zip
+
+          tar czf ./dist/boil-node-22.tgz ./dist/boil.cjs
+
+          tag = ${{ matrix.package.name }}@${{ matrix.package.version }}
+          gh release create "$tag" ./dist/*.tgz \
+            --repo="$GITHUB_REPOSITORY" \
+            --title="${tag}" \
+            --generate-notes
