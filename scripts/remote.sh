@@ -10,4 +10,5 @@ curl -sL https://github.com/datalek/boil/releases/latest/download/boil-node-22.t
 
 # Extracting
 tar -xzf archive.tgz
-npx node dist/boil.cjs "$@"
+# Redirect stdin to tty for interactive input
+npx node dist/boil.cjs "$@" < /dev/tty
