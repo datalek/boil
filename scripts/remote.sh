@@ -10,4 +10,4 @@ curl -sL https://github.com/datalek/boil/releases/latest/download/boil-node-22.t
 
 # Extracting
 tar -xzf archive.tgz
-npx node boil.cjs "$@"
+npx node dist/boil.cjs "$@"
