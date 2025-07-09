@@ -12,7 +12,6 @@ A simple project scaffolding tool that generates project structures from hsfiles
 - Support for local files and remote URLs
 - Variable substitution with `{{variable}}` syntax
 - Interactive prompts for missing variables
-- Verbose output option
 - Easy installation and usage
 
 ## Installation
@@ -37,7 +36,7 @@ boil my-project ./templates/basic
 boil my-project https://raw.githubusercontent.com/datalek/boil/main/examples/minimal-js
 
 # Using remote runner
-curl -fsSL https://raw.githubusercontent.com/datalek/boil/main/remote.sh | bash -s -- my-project https://raw.githubusercontent.com/datalek/boil/main/examples/minimal-js 
+curl -fsSL https://raw.githubusercontent.com/datalek/boil/main/scripts/remote.sh | bash -s -- my-project https://raw.githubusercontent.com/datalek/boil/main/examples/minimal-js 
 ```
 
 ### Remote Runner
@@ -45,7 +44,7 @@ curl -fsSL https://raw.githubusercontent.com/datalek/boil/main/remote.sh | bash 
 For convenience, you can also use the remote runner script:
 
 ``` bash
-curl -fsSL https://raw.githubusercontent.com/datalek/boil/main/remote.sh | bash  -s -- <project-name> <template-path> 
+curl -fsSL https://raw.githubusercontent.com/datalek/boil/main/scripts/remote.sh | bash  -s -- <project-name> <template-path>
 ```
 
 ## Template Format
