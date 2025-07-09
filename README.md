@@ -37,11 +37,13 @@ boil my-project ./templates/basic
 boil my-project https://raw.githubusercontent.com/user/repo/main/template
 ```
 
-### Remote Template Runner
+### Remote Runner
 
 For convenience, you can also use the remote runner script:
 
-TODO
+``` bash
+curl -fsSL https://raw.githubusercontent.com/datalek/boil/main/remote.sh | bash
+```
 
 ## Template Format
 
