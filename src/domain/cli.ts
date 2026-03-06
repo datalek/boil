@@ -8,16 +8,48 @@ export interface CliEnv {
   };
 }
 
-interface InputArgs {
+interface CreateArgs {
+  readonly type: 'create';
   readonly projectName: string;
   readonly templatePath: string;
 }
+
+interface ReverseArgs {
+  readonly type: 'reverse';
+  readonly folderPath: string;
+  readonly outputPath: string;
+}
+
+export type InputArgs = CreateArgs | ReverseArgs;
 
 export const parseInputArgs =
   (argv: readonly string[]) =>
   (env: CliEnv): E.Either<string, InputArgs> => {
     // the first argument is node, the second is the file executed
     const args = argv.slice(2);
+
+    // Check for --reverse flag
+    if (args.includes('--reverse')) {
+      const argsWithoutFlag = args.filter((a) => a !== '--reverse');
+      if (argsWithoutFlag.length < 2) {
+        const message = [
+          'Usage: boil --reverse <folder-path> <output-template-path>',
+          '',
+          'Examples:',
+          '  boil --reverse ./my-project ./template.hsfiles',
+          '  boil --reverse ./src/components ./components-template.hsfiles',
+        ].join('\n');
+
+        // eslint-disable-next-line functional/no-expression-statements
+        env.cli.write(message);
+        return E.left(message);
+      }
+      return E.right({
+        type: 'reverse',
+        folderPath: argsWithoutFlag[0],
+        outputPath: argsWithoutFlag[1],
+      });
+    }
 
     if (args.length < 2) {
       const message = [
@@ -27,6 +59,9 @@ export const parseInputArgs =
         '  boil my-project ./templates/basic',
         '  boil my-app https://raw.githubusercontent.com/user/repo/main/template.hsfiles',
         '  boil my-project ./template.hsfiles --verbose',
+        '',
+        'Reverse mode (create template from folder):',
+        '  boil --reverse <folder-path> <output-template-path>',
       ].join('\n');
 
       // eslint-disable-next-line functional/no-expression-statements
@@ -34,6 +69,7 @@ export const parseInputArgs =
       return E.left(message);
     } else {
       return E.right({
+        type: 'create',
         projectName: args[0],
         templatePath: args[1],
       });

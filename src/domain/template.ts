@@ -21,11 +21,17 @@ export interface TemplateEnv {
       options: { readonly recursive: true },
     ) => Promise<string | undefined>;
     readonly writeFile: (typeof nodeFS)['promises']['writeFile'];
+    readonly readdir: (
+      path: nodeFS.PathLike,
+      options: { readonly withFileTypes: true },
+    ) => Promise<readonly nodeFS.Dirent[]>;
+    readonly stat: (path: nodeFS.PathLike) => Promise<nodeFS.Stats>;
   };
   readonly path: {
     readonly dirname: (typeof nodePath)['dirname'];
     readonly resolve: (typeof nodePath)['resolve'];
     readonly join: (typeof nodePath)['join'];
+    readonly relative: (typeof nodePath)['relative'];
   };
 }
 
@@ -210,5 +216,130 @@ export const createFiles =
 
     logger.info(`Project '${rootPath}' created successfully!`);
     logger.info(`Generated ${template.files.length} files`);
+    return E.right(void 0);
+  };
+
+interface CollectedFile {
+  readonly relativePath: string;
+  readonly content: string;
+}
+
+const collectFiles =
+  (rootPath: string, currentPath: string) =>
+  async (
+    env: TemplateEnv & LoggerEnv,
+  ): Promise<E.Either<Error, readonly CollectedFile[]>> => {
+    const { fs, path } = env;
+
+    const entries = await E.tryCatch(
+      () => fs.readdir(currentPath, { withFileTypes: true }),
+      (e) => new Error(`Failed to read directory ${currentPath}: ${e}`),
+    );
+
+    if (entries.type === 'left') return entries;
+
+    // eslint-disable-next-line functional/prefer-readonly-type
+    const files: CollectedFile[] = [];
+
+    // eslint-disable-next-line functional/no-loop-statements
+    for (const entry of entries.value) {
+      const fullPath = path.join(currentPath, entry.name);
+
+      if (entry.isDirectory()) {
+        const subFiles = await collectFiles(rootPath, fullPath)(env);
+        if (subFiles.type === 'left') return subFiles;
+        // eslint-disable-next-line functional/no-expression-statements, functional/immutable-data
+        files.push(...subFiles.value);
+      } else if (entry.isFile()) {
+        const content = await E.tryCatch(
+          () => fs.readFile(fullPath, 'utf-8'),
+          (e) => new Error(`Failed to read file ${fullPath}: ${e}`),
+        );
+        if (content.type === 'left') return content;
+
+        const relativePath = path.relative(rootPath, fullPath);
+        // eslint-disable-next-line functional/no-expression-statements, functional/immutable-data
+        files.push({ relativePath, content: content.value });
+      }
+    }
+
+    return E.right(files);
+  };
+
+const generateTemplateContent = (files: readonly CollectedFile[]): string => {
+  return files
+    .map((file) => `{-# START_FILE ${file.relativePath} #-}\n${file.content}`)
+    .join('\n');
+};
+
+export const createTemplateFromFolder =
+  (folderPath: string, outputPath: string) =>
+  async (env: TemplateEnv & LoggerEnv): Promise<E.Either<Error, void>> => {
+    const { fs, path, logger } = env;
+
+    const resolvedFolder = path.resolve(folderPath);
+    const resolvedOutput = path.resolve(outputPath);
+
+    logger.info(`Creating template from folder: ${resolvedFolder}`);
+
+    // Check if folder exists
+    const folderExists = await E.tryCatch(
+      () => fs.stat(resolvedFolder),
+      () => new Error(`Folder does not exist: ${resolvedFolder}`),
+    );
+
+    if (folderExists.type === 'left') return folderExists;
+    if (!folderExists.value.isDirectory())
+      return E.left(new Error(`Path is not a directory: ${resolvedFolder}`));
+
+    // Check if output already exists
+    const outputExists = await E.tryCatch(
+      () => fs.access(resolvedOutput, fs.constants.F_OK),
+      () => new Error(),
+    );
+
+    if (outputExists.type === 'right')
+      return E.left(new Error(`Output file already exists: ${resolvedOutput}`));
+
+    // Collect all files
+    const collectedFiles = await collectFiles(
+      resolvedFolder,
+      resolvedFolder,
+    )(env);
+
+    if (collectedFiles.type === 'left') return collectedFiles;
+
+    if (collectedFiles.value.length === 0)
+      return E.left(new Error('No files found in folder'));
+
+    logger.info(`Found ${collectedFiles.value.length} files`);
+
+    // Generate template content
+    const templateContent = generateTemplateContent(collectedFiles.value);
+
+    // Ensure output directory exists
+    const outputDir = path.dirname(resolvedOutput);
+    const outputDirExists = await E.tryCatch(
+      () => fs.access(outputDir, fs.constants.F_OK),
+      () => new Error(),
+    );
+    if (outputDirExists.type === 'left') {
+      const createDir = await E.tryCatch(
+        () => fs.mkdir(outputDir, { recursive: true }),
+        (e) => new Error(`Failed to create output directory: ${e}`),
+      );
+      if (createDir.type === 'left') return createDir;
+    }
+
+    // Write template file
+    const writeResult = await E.tryCatch(
+      () => fs.writeFile(resolvedOutput, templateContent),
+      (e) => new Error(`Failed to write template file: ${e}`),
+    );
+
+    if (writeResult.type === 'left') return writeResult;
+
+    logger.info(`Template created successfully: ${resolvedOutput}`);
+    logger.info(`Generated template with ${collectedFiles.value.length} files`);
     return E.right(void 0);
   };

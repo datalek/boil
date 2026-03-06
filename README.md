@@ -9,6 +9,7 @@ A simple project scaffolding tool that generates project structures from hsfiles
 ## Features
 
 - Generate project scaffolds from templates
+- Create templates from existing folders (reverse mode)
 - Support for local files and remote URLs
 - Variable substitution with `{{variable}}` syntax
 - Interactive prompts for missing variables
@@ -45,6 +46,24 @@ For convenience, you can also use the remote runner script:
 
 ``` bash
 curl -fsSL https://raw.githubusercontent.com/datalek/boil/main/scripts/remote.sh | bash  -s -- <project-name> <template-path>
+```
+
+### Reverse Mode
+
+Create a template from an existing project folder:
+
+```bash
+boil --reverse <folder-path> <output-template-path>
+```
+
+This is useful for converting existing projects into reusable templates.
+
+```bash
+# Create template from a project folder
+boil --reverse ./my-project ./templates/my-template.hsfiles
+
+# Create template from a specific directory
+boil --reverse ./src/components ./components-template.hsfiles
 ```
 
 ## Template Format

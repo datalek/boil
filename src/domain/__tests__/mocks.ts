@@ -14,6 +14,8 @@ export const makeTestEnv = () => {
       access: vi.fn<TemplateEnv['fs']['access']>(),
       mkdir: vi.fn<TemplateEnv['fs']['mkdir']>(),
       writeFile: vi.fn<TemplateEnv['fs']['writeFile']>(),
+      readdir: vi.fn<TemplateEnv['fs']['readdir']>(),
+      stat: vi.fn<TemplateEnv['fs']['stat']>(),
     },
     mockLogger: {
       info: vi.fn<LoggerEnv['logger']['info']>(),

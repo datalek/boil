@@ -11,6 +11,7 @@ describe('cli', () => {
 
       const actual = parseInputArgs(argv)(env);
       const expected = E.right({
+        type: 'create',
         projectName: 'my-project',
         templatePath: './template.hsfiles',
       });
@@ -29,6 +30,7 @@ describe('cli', () => {
 
       const actual = parseInputArgs(argv)(env);
       const expected = E.right({
+        type: 'create',
         projectName: 'my-app',
         templatePath: 'https://example.com/template.hsfiles',
       });
@@ -53,6 +55,59 @@ describe('cli', () => {
       parseInputArgs(argv)(env);
 
       expect(mocks.mockCli.write.mock.calls[0][0]).to.toContain('Usage: boil');
+    });
+
+    it('should parse --reverse flag with valid arguments', () => {
+      const { env } = makeTestEnv();
+      const argv = [
+        'node',
+        'boil',
+        '--reverse',
+        './my-folder',
+        './output.hsfiles',
+      ];
+
+      const actual = parseInputArgs(argv)(env);
+      const expected = E.right({
+        type: 'reverse',
+        folderPath: './my-folder',
+        outputPath: './output.hsfiles',
+      });
+
+      expect(actual).toStrictEqual(expected);
+    });
+
+    it('should parse --reverse flag regardless of position', () => {
+      const { env } = makeTestEnv();
+      const argv = [
+        'node',
+        'boil',
+        './my-folder',
+        '--reverse',
+        './output.hsfiles',
+      ];
+
+      const actual = parseInputArgs(argv)(env);
+      const expected = E.right({
+        type: 'reverse',
+        folderPath: './my-folder',
+        outputPath: './output.hsfiles',
+      });
+
+      expect(actual).toStrictEqual(expected);
+    });
+
+    it('should return error when --reverse flag has insufficient arguments', () => {
+      const { env, mocks } = makeTestEnv();
+      const argv = ['node', 'boil', '--reverse', './my-folder'];
+
+      const actual = parseInputArgs(argv)(env);
+
+      expect(actual.type).toStrictEqual('left');
+      expect(mocks.mockCli.write).toBeCalledTimes(1);
+      expect(mocks.mockCli.write.mock.calls[0][0]).to.toContain(
+        'Usage: boil --reverse',
+      );
     });
   });
 
